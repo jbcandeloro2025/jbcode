@@ -23,27 +23,12 @@
     overflow-x: hidden;
     position: relative;
   }
-  .bg-glyph {
+  #matrix {
     position: fixed;
-    font-family: "Courier New", monospace;
-    font-weight: 700;
-    color: #e0665f;
-    opacity: 0.08;
-    line-height: 1;
-    pointer-events: none;
-    -webkit-user-select: none;
-    user-select: none;
+    inset: 0;
     z-index: 0;
-  }
-  .bg-glyph.top-left {
-    top: 4%;
-    left: 2%;
-    font-size: clamp(4rem, 12vw, 8rem);
-  }
-  .bg-glyph.bottom-right {
-    bottom: 4%;
-    right: 3%;
-    font-size: clamp(3rem, 9vw, 6rem);
+    pointer-events: none;
+    opacity: 0.5;
   }
   .wrap {
     position: relative;
@@ -143,6 +128,8 @@
   <span class="bg-glyph top-left">&lt;/&gt;</span>
   <span class="bg-glyph bottom-right">[&nbsp;]</span>
 
+  <canvas id="matrix"></canvas>
+
   <div class="wrap">
     <div>
       <div class="badge"><span class="bracket">&lt;</span><span class="name">jbCode</span><span class="bracket">/&gt;</span></div>
@@ -170,5 +157,77 @@
 <span class="kw">export default</span> jbCode;</pre>
     </div>
   </div>
+
+  <script>
+  (function () {
+    var canvas = document.getElementById('matrix');
+    var ctx = canvas.getContext('2d');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    var chars = '01{}[]()<>/\\;:=+-_$#@01'.split('');
+    var fontSize = 16;
+    var columns, drops;
+    var warpRadius = 170;
+    var mouseX = -9999, mouseY = -9999;
+
+    function updatePointer(x, y) { mouseX = x; mouseY = y; }
+    window.addEventListener('mousemove', function (e) { updatePointer(e.clientX, e.clientY); });
+    window.addEventListener('mouseleave', function () { updatePointer(-9999, -9999); });
+    window.addEventListener('touchmove', function (e) {
+      if (e.touches.length) updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    window.addEventListener('touchend', function () { updatePointer(-9999, -9999); });
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      columns = Math.floor(canvas.width / fontSize);
+      drops = new Array(columns).fill(1);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function draw() {
+      ctx.fillStyle = 'rgba(24, 24, 26, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (var i = 0; i < drops.length; i++) {
+        var text = chars[Math.floor(Math.random() * chars.length)];
+        var x = i * fontSize;
+        var y = drops[i] * fontSize;
+
+        var drawX = x, drawY = y, size = fontSize;
+        var r = 249, g = 115, b = 22;
+
+        var dx = x - mouseX, dy = y - mouseY;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < warpRadius) {
+          var warp = 1 - dist / warpRadius;
+          var angle = Math.atan2(dy, dx) + warp * 2.4;
+          var newDist = dist * (1 - warp * 0.55);
+          drawX = mouseX + Math.cos(angle) * newDist;
+          drawY = mouseY + Math.sin(angle) * newDist;
+          size = fontSize * (1 + warp * 1.1);
+          r = lerp(249, 255, warp);
+          g = lerp(115, 247, warp);
+          b = lerp(22, 237, warp);
+        }
+
+        ctx.font = size + 'px "Cascadia Code", Consolas, monospace';
+        ctx.fillStyle = 'rgb(' + (r | 0) + ',' + (g | 0) + ',' + (b | 0) + ')';
+        ctx.fillText(text, drawX, drawY);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    setInterval(draw, 50);
+  })();
+  </script>
 </body>
 </html>
