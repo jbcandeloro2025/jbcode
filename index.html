@@ -165,16 +165,6 @@
     var chars = '01{}[]()<>/\\;:=+-_$#@01'.split('');
     var fontSize = 16;
     var columns, drops;
-    var warpRadius = 170;
-    var mouseX = -9999, mouseY = -9999;
-
-    function updatePointer(x, y) { mouseX = x; mouseY = y; }
-    window.addEventListener('mousemove', function (e) { updatePointer(e.clientX, e.clientY); });
-    window.addEventListener('mouseleave', function () { updatePointer(-9999, -9999); });
-    window.addEventListener('touchmove', function (e) {
-      if (e.touches.length) updatePointer(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-    window.addEventListener('touchend', function () { updatePointer(-9999, -9999); });
 
     function resize() {
       canvas.width = window.innerWidth;
@@ -185,38 +175,15 @@
     resize();
     window.addEventListener('resize', resize);
 
-    function lerp(a, b, t) { return a + (b - a) * t; }
-
     function draw() {
       ctx.fillStyle = 'rgba(24, 24, 26, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = fontSize + 'px "Cascadia Code", Consolas, monospace';
+      ctx.fillStyle = '#f97316';
 
       for (var i = 0; i < drops.length; i++) {
         var text = chars[Math.floor(Math.random() * chars.length)];
-        var x = i * fontSize;
-        var y = drops[i] * fontSize;
-
-        var size = fontSize;
-        var r = 249, g = 115, b = 22;
-        var glow = 0;
-
-        var dx = x - mouseX, dy = y - mouseY;
-        var dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < warpRadius) {
-          var warp = 1 - dist / warpRadius;
-          size = fontSize * (1 + warp * 0.35);
-          r = lerp(249, 255, warp);
-          g = lerp(115, 247, warp);
-          b = lerp(22, 237, warp);
-          glow = warp * 14;
-        }
-
-        ctx.font = size + 'px "Cascadia Code", Consolas, monospace';
-        ctx.fillStyle = 'rgb(' + (r | 0) + ',' + (g | 0) + ',' + (b | 0) + ')';
-        ctx.shadowColor = 'rgba(253, 186, 116, ' + (glow / 14) + ')';
-        ctx.shadowBlur = glow;
-        ctx.fillText(text, x, y);
-        ctx.shadowBlur = 0;
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
           drops[i] = 0;
