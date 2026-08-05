@@ -159,14 +159,16 @@
     if (reduceMotion) return;
 
     var chars = '01{}[]()<>/\\;:=+-_$#@01'.split('');
+    var word = 'jbCode';
     var fontSize = 16;
-    var columns, drops;
+    var columns, drops, wordProgress;
 
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       columns = Math.floor(canvas.width / fontSize);
       drops = new Array(columns).fill(1);
+      wordProgress = new Array(columns).fill(-1);
     }
     resize();
     window.addEventListener('resize', resize);
@@ -175,10 +177,19 @@
       ctx.fillStyle = 'rgba(24, 24, 26, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.font = fontSize + 'px "Cascadia Code", Consolas, monospace';
-      ctx.fillStyle = '#f97316';
 
       for (var i = 0; i < drops.length; i++) {
-        var text = chars[Math.floor(Math.random() * chars.length)];
+        var text;
+        if (wordProgress[i] >= 0) {
+          text = word[wordProgress[i]];
+          ctx.fillStyle = '#ffe8d1';
+          wordProgress[i]++;
+          if (wordProgress[i] >= word.length) wordProgress[i] = -1;
+        } else {
+          text = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillStyle = '#f97316';
+          if (Math.random() < 0.00015) wordProgress[i] = 0;
+        }
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
