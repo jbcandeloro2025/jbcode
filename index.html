@@ -111,6 +111,9 @@
     white-space: pre;
     color: #d4d4d4;
   }
+  #typedCode {
+    min-height: 20.8em;
+  }
   .kw { color: #569cd6; }
   .key { color: #9cdcfe; }
   .str { color: #ce9178; }
@@ -260,7 +263,7 @@
       }
       currentSpan.appendChild(document.createTextNode(item.ch));
       idx++;
-      setTimeout(step, 14 + Math.random() * 22);
+      setTimeout(step, 24 + Math.random() * 32);
     }
 
     function start() {
