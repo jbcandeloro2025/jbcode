@@ -114,6 +114,11 @@
   .kw { color: #569cd6; }
   .key { color: #9cdcfe; }
   .str { color: #ce9178; }
+  .cursor {
+    color: #f97316;
+    animation: blink 0.9s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
   @media (max-width: 860px) {
     .wrap {
       grid-template-columns: 1fr;
@@ -139,19 +144,7 @@
       <div class="dots">
         <span class="red"></span><span class="yellow"></span><span class="green"></span>
       </div>
-      <pre><span class="kw">const</span> jbCode = {
-  <span class="key">nome</span>: <span class="str">"jbCode"</span>,
-  <span class="key">responsavel</span>: <span class="str">"JB Candeloro"</span>,
-  <span class="key">servicos</span>: [
-    <span class="str">"Front-end Development"</span>,
-    <span class="str">"Back-end Development"</span>,
-    <span class="str">"Automação com n8n"</span>,
-    <span class="str">"Criação de Sites"</span>,
-  ],
-  <span class="key">missao</span>: <span class="str">"Transformar ideias em realidade digital"</span>,
-};
-
-<span class="kw">export default</span> jbCode;</pre>
+      <pre id="typedCode"></pre>
     </div>
   </div>
 
@@ -192,6 +185,96 @@
       }
     }
     setInterval(draw, 50);
+  })();
+  </script>
+
+  <script>
+  (function () {
+    var el = document.getElementById('typedCode');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var runs = [
+      { cls: 'kw', text: 'const ' },
+      { cls: null, text: 'jbCode = {\n  ' },
+      { cls: 'key', text: 'nome' },
+      { cls: null, text: ': ' },
+      { cls: 'str', text: '"jbCode"' },
+      { cls: null, text: ',\n  ' },
+      { cls: 'key', text: 'responsavel' },
+      { cls: null, text: ': ' },
+      { cls: 'str', text: '"JB Candeloro"' },
+      { cls: null, text: ',\n  ' },
+      { cls: 'key', text: 'servicos' },
+      { cls: null, text: ': [\n    ' },
+      { cls: 'str', text: '"Front-end Development"' },
+      { cls: null, text: ',\n    ' },
+      { cls: 'str', text: '"Back-end Development"' },
+      { cls: null, text: ',\n    ' },
+      { cls: 'str', text: '"Automação com n8n"' },
+      { cls: null, text: ',\n    ' },
+      { cls: 'str', text: '"Criação de Sites"' },
+      { cls: null, text: ',\n  ],\n  ' },
+      { cls: 'key', text: 'missao' },
+      { cls: null, text: ': ' },
+      { cls: 'str', text: '"Transformar ideias em realidade digital"' },
+      { cls: null, text: ',\n};\n\n' },
+      { cls: 'kw', text: 'export default' },
+      { cls: null, text: ' jbCode;' }
+    ];
+
+    if (reduceMotion) {
+      runs.forEach(function (run) {
+        var span = document.createElement('span');
+        if (run.cls) span.className = run.cls;
+        span.textContent = run.text;
+        el.appendChild(span);
+      });
+      return;
+    }
+
+    var flat = [];
+    runs.forEach(function (run) {
+      for (var i = 0; i < run.text.length; i++) {
+        flat.push({ ch: run.text[i], cls: run.cls });
+      }
+    });
+
+    var cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    cursor.textContent = '▌';
+    el.appendChild(cursor);
+
+    var idx = 0;
+    var currentSpan = null;
+    var currentCls;
+    var started = false;
+
+    function step() {
+      if (idx >= flat.length) return;
+      var item = flat[idx];
+      if (item.cls !== currentCls || !currentSpan) {
+        currentCls = item.cls;
+        currentSpan = document.createElement('span');
+        if (currentCls) currentSpan.className = currentCls;
+        el.insertBefore(currentSpan, cursor);
+      }
+      currentSpan.appendChild(document.createTextNode(item.ch));
+      idx++;
+      setTimeout(step, 14 + Math.random() * 22);
+    }
+
+    function start() {
+      if (started) return;
+      started = true;
+      step();
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) start();
+      });
+    }, { threshold: 0.2 });
+    observer.observe(el);
   })();
   </script>
 </body>
